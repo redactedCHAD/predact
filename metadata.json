@@ -1,5 +1,5 @@
 {
-  "name": "Prediction Market Consensus Analyzer",
-  "description": "An AI-powered application that analyzes binary (YES/NO) prediction markets from Polymarket URLs. It uses YES and NO agent teams to research, debate, and form a consensus on the likely outcome.",
+  "name": "Predacted",
+  "description": "An AI-powered prediction market consensus analyzer.",
   "requestFramePermissions": []
 }

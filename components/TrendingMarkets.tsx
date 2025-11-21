@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { fetchTrendingMarkets } from '../services/polymarketService';
 import type { PolymarketMarket } from '../services/polymarketService';
@@ -39,15 +38,14 @@ export const TrendingMarkets: React.FC<TrendingMarketsProps> = ({ onSelectMarket
   if (isFetching) {
     return (
       <div className="w-full max-w-2xl mx-auto text-center py-4">
-        <LoadingSpinner className="w-6 h-6 mx-auto text-gray-400" />
-        <p className="text-gray-500 mt-2">Fetching trending markets...</p>
+        <LoadingSpinner className="w-6 h-6 mx-auto text-brand-start" />
       </div>
     );
   }
 
   if (error && markets.length === 0) {
     return (
-      <div className="w-full max-w-2xl mx-auto text-center py-4 text-yellow-500/80">
+      <div className="w-full max-w-2xl mx-auto text-center py-4 text-slate-400 text-sm">
         {error}
       </div>
     );
@@ -58,20 +56,20 @@ export const TrendingMarkets: React.FC<TrendingMarketsProps> = ({ onSelectMarket
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto -my-4">
-      <h3 className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-500 mb-3">
-        <BoltIcon className="w-4 h-4 text-yellow-500" />
-        or select a trending market
+    <div className="w-full max-w-3xl mx-auto">
+      <h3 className="flex items-center justify-center gap-2 text-xs font-bold tracking-wide uppercase text-slate-400 mb-4">
+        <BoltIcon className="w-4 h-4 text-brand-warning" />
+        Trending Markets
       </h3>
-      <div className="grid grid-cols-1 gap-2">
+      <div className="flex flex-wrap justify-center gap-3">
         {markets.map((market) => (
           <button
             key={market.url}
             onClick={() => onSelectMarket(market.url)}
             disabled={isLoading}
-            className="w-full text-left p-3 bg-gray-900/50 border border-gray-700/50 rounded-lg hover:bg-gray-800/70 hover:border-indigo-500/50 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+            className="px-5 py-3 bg-white border border-gray-100 rounded-full shadow-card-light hover:shadow-card-medium hover:border-brand-start/30 hover:text-brand-start transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 text-sm font-medium"
           >
-            <span className="text-gray-300 text-sm group-hover:text-white transition-colors">{market.question}</span>
+            {market.question}
           </button>
         ))}
       </div>

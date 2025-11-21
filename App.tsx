@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { UrlInputForm } from './components/UrlInputForm';
 import { AnalysisResultDisplay } from './components/AnalysisResultDisplay';
@@ -38,36 +37,44 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="bg-gray-950 text-gray-200 min-h-full flex flex-col items-center p-4 sm:p-6 md:p-8">
+    <div className="min-h-full flex flex-col items-center p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-7xl mx-auto">
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-             <LightbulbIcon className="w-10 h-10 text-yellow-400"/>
-             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Prediction Market Consensus Analyzer</h1>
+        <header className="text-center mb-12 mt-8">
+          <div className="flex items-center justify-center gap-4 mb-3">
+             <div className="bg-gradient-to-br from-brand-start to-brand-end p-2 rounded-xl shadow-glow">
+               <LightbulbIcon className="w-8 h-8 text-white"/>
+             </div>
+             <h1 className="text-5xl font-serif font-bold tracking-tight text-slate-900">Predacted</h1>
           </div>
-          <p className="text-gray-400 text-lg">
-            A multi-agent framework to analyze and debate Polymarket outcomes.
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto font-light">
+            A multi-agent consensus engine for prediction markets.
           </p>
         </header>
 
-        <main className="flex flex-col gap-8">
-          <UrlInputForm
-            url={marketUrl}
-            setUrl={setMarketUrl}
-            onSubmit={() => performAnalysis(marketUrl)}
-            isLoading={isLoading}
-          />
-          
-          <TrendingMarkets onSelectMarket={performAnalysis} isLoading={isLoading} />
+        <main className="flex flex-col gap-10">
+          <div className="flex flex-col gap-8">
+            <UrlInputForm
+              url={marketUrl}
+              setUrl={setMarketUrl}
+              onSubmit={() => performAnalysis(marketUrl)}
+              isLoading={isLoading}
+            />
+            
+            <TrendingMarkets onSelectMarket={performAnalysis} isLoading={isLoading} />
+          </div>
 
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-center">
+            <div className="bg-red-50 border border-red-100 text-red-600 px-6 py-4 rounded-2xl text-center shadow-sm">
               {error}
             </div>
           )}
 
           <AnalysisResultDisplay result={analysisResult} isLoading={isLoading} />
         </main>
+        
+        <footer className="mt-20 text-center text-slate-400 text-sm pb-8">
+          © {new Date().getFullYear()} Predacted. Powered by Gemini 2.5
+        </footer>
       </div>
     </div>
   );

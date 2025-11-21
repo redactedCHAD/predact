@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -16,25 +15,25 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({ url, setUrl, onSubmi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 shadow-lg">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-center gap-3 bg-white border border-gray-100 rounded-3xl p-2 shadow-card-medium">
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://polymarket.com/event/..."
-          className="w-full px-4 py-3 bg-gray-800 text-gray-200 border border-gray-700 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 outline-none placeholder-gray-500"
+          className="w-full px-6 py-4 bg-transparent text-slate-900 placeholder-slate-400 rounded-2xl focus:outline-none focus:bg-bg-input transition duration-200"
           disabled={isLoading}
         />
         <button
           type="submit"
-          className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950 focus:ring-indigo-500 transition-transform transform hover:scale-105 disabled:bg-indigo-800 disabled:cursor-not-allowed disabled:scale-100"
+          className="w-full sm:w-auto min-w-[160px] flex items-center justify-center px-8 py-4 bg-gradient-to-r from-brand-start to-brand-end text-white font-semibold rounded-full shadow-glow hover:shadow-glow-hover hover:scale-[1.02] active:scale-95 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
           disabled={isLoading}
         >
           {isLoading ? (
             <>
-              <LoadingSpinner className="w-5 h-5 mr-2" />
-              Analyzing...
+              <LoadingSpinner className="w-5 h-5 mr-2 text-white" />
+              Analyzing
             </>
           ) : (
             'Analyze'
