@@ -15,14 +15,14 @@ export const UrlInputForm: React.FC<UrlInputFormProps> = ({ url, setUrl, onSubmi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-white border border-gray-100 rounded-3xl p-2 shadow-card-medium">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto animate-slide-up-fade">
+      <div className="flex flex-col sm:flex-row items-center gap-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/5 rounded-3xl p-2 shadow-card-medium dark:shadow-none transition-colors duration-300">
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://polymarket.com/event/..."
-          className="w-full px-6 py-4 bg-transparent text-slate-900 placeholder-slate-400 rounded-2xl focus:outline-none focus:bg-bg-input transition duration-200"
+          className="w-full px-6 py-4 bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl focus:outline-none focus:bg-bg-input dark:focus:bg-slate-800 transition duration-200"
           disabled={isLoading}
         />
         <button

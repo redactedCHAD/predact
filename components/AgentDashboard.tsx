@@ -11,7 +11,7 @@ interface AgentDashboardProps {
   isLoading: boolean;
 }
 
-const AVAILABLE_MODELS: Agent['model'][] = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+const AVAILABLE_MODELS: Agent['model'][] = ['gemini-2.5-flash', 'gemini-3-pro-preview'];
 
 export const AgentDashboard: React.FC<AgentDashboardProps> = ({ agents, setAgents, isLoading }) => {
   const addAgent = () => {

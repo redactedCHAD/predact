@@ -56,8 +56,8 @@ export const TrendingMarkets: React.FC<TrendingMarketsProps> = ({ onSelectMarket
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      <h3 className="flex items-center justify-center gap-2 text-xs font-bold tracking-wide uppercase text-slate-400 mb-4">
+    <div className="w-full max-w-3xl mx-auto animate-slide-up-fade" style={{ animationDelay: '200ms' }}>
+      <h3 className="flex items-center justify-center gap-2 text-xs font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-4">
         <BoltIcon className="w-4 h-4 text-brand-warning" />
         Trending Markets
       </h3>
@@ -67,7 +67,7 @@ export const TrendingMarkets: React.FC<TrendingMarketsProps> = ({ onSelectMarket
             key={market.url}
             onClick={() => onSelectMarket(market.url)}
             disabled={isLoading}
-            className="px-5 py-3 bg-white border border-gray-100 rounded-full shadow-card-light hover:shadow-card-medium hover:border-brand-start/30 hover:text-brand-start transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 text-sm font-medium"
+            className="px-5 py-3 bg-white dark:bg-slate-800/50 border border-gray-100 dark:border-slate-700 rounded-full shadow-card-light hover:shadow-glow hover:border-brand-start/30 hover:text-brand-start dark:hover:text-brand-accent dark:hover:border-brand-accent/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 dark:text-slate-300 text-sm font-medium backdrop-blur-sm"
           >
             {market.question}
           </button>

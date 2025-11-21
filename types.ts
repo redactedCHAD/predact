@@ -43,14 +43,12 @@ export interface AnalysisResult {
   allSources: Source[];
 }
 
-// Fix: Add missing TeamAnalysis type definition for use in components/TeamPanel.tsx.
 export interface TeamAnalysis {
   confidence: number;
   arguments: string[];
 }
 
-// Fix: Add missing Agent type definition for use in components/AgentDashboard.tsx.
 export interface Agent {
   id: string;
-  model: 'gemini-2.5-flash' | 'gemini-2.5-pro';
+  model: 'gemini-2.5-flash' | 'gemini-3-pro-preview';
 }

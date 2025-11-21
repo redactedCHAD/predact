@@ -12,18 +12,30 @@ if (!API_KEY) {
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const parseJsonResponse = <T,>(text: string): T | null => {
+  // If the model follows instructions and returns strict JSON
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    // ignore
+  }
+
   const match = text.match(/```json\n([\s\S]*?)\n```/);
   if (match && match[1]) {
     try {
       return JSON.parse(match[1]) as T;
     } catch (e) {
-      console.error("Failed to parse JSON:", text, e);
-      return null;
+      console.error("Failed to parse JSON block:", text, e);
     }
   }
   // Fallback for cases where the model forgets the markdown block
   try {
-    return JSON.parse(text) as T;
+    // Attempt to find the first '{' and last '}'
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+       const jsonString = text.substring(firstBrace, lastBrace + 1);
+       return JSON.parse(jsonString) as T;
+    }
   } catch (e) {
     // Not a JSON string
   }
@@ -44,7 +56,7 @@ You are a world-class specialist research agent. Your task is to analyze the fol
 
 Use Google Search to find the most relevant, up-to-date information.
 Present your findings as a JSON object inside a markdown code block.
-The JSON object must strictly follow JSON standards. Ensure that any double quotes within string values are properly escaped with a backslash (e.g., "an argument with a \\"quoted phrase\\" inside").
+The JSON object must strictly follow JSON standards. Ensure that any double quotes within string values are properly escaped with a backslash.
 The JSON object must have three keys:
 1. "keyFindings": An array of 3-5 concise, impactful string bullet points summarizing your most important findings.
 2. "summary": A 2-3 sentence paragraph explaining your analysis and reasoning.
@@ -71,38 +83,54 @@ The JSON object must have three keys:
 export async function analyzeMarketUrl(url: string): Promise<AnalysisResult> {
   // Step 1: Extract the market question
   const questionPrompt = `Given this Polymarket URL: ${url}, what is the specific binary (YES/NO) question being asked? Please state the question clearly and concisely, without any additional text or pleasantries.`;
-  const questionResponse = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: questionPrompt,
-  });
-  const marketQuestion = questionResponse.text.trim();
+  
+  let marketQuestion = "";
+  try {
+    const questionResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: questionPrompt,
+    });
+    marketQuestion = questionResponse.text.trim();
+  } catch (e) {
+    console.error("Failed to extract question:", e);
+    throw new Error("Could not extract the market question from the URL.");
+  }
 
   // Step 2: Run specialized agent analyses in parallel
   const researchAgents: ResearchAgentType[] = Object.values(ResearchAgentTypes);
   const agentAnalysisPromises = researchAgents.map(async (agentType) => {
     const prompt = getAgentPrompt(agentType, marketQuestion);
-    const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: { tools: [{ googleSearch: {} }] },
-    });
+    try {
+        // NOTE: responseMimeType cannot be used with tools: googleSearch
+        const result = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: { tools: [{ googleSearch: {} }] },
+        });
 
-    const report = parseJsonResponse<Omit<ResearchReport, 'agentType' | 'debate'>>(result.text) || {
-      keyFindings: [`Failed to get a valid report from ${agentType} agent.`],
-      summary: 'Analysis could not be completed due to a parsing error.',
-      leaning: 'NEUTRAL'
-    };
-    
-    const sources = extractSources(result);
-    return { ...report, agentType, sources };
+        const report = parseJsonResponse<Omit<ResearchReport, 'agentType' | 'debate'>>(result.text) || {
+        keyFindings: [`Failed to get a valid report from ${agentType} agent.`],
+        summary: 'Analysis could not be completed due to a parsing error.',
+        leaning: 'NEUTRAL'
+        };
+        
+        const sources = extractSources(result);
+        return { ...report, agentType, sources };
+    } catch (e) {
+        console.error(`Agent ${agentType} failed:`, e);
+        return {
+            agentType,
+            keyFindings: ["Agent unavailable."],
+            summary: "This agent encountered an error.",
+            leaning: "NEUTRAL" as const,
+            sources: []
+        };
+    }
   });
 
   const initialReports = await Promise.all(agentAnalysisPromises);
 
   // Step 2.5: Analyze contradictions between agents
-  // FIX: Explicitly type reportsWithDebates to resolve a TypeScript union type inference
-  // issue. This ensures the array elements are correctly typed with an optional `debate`
-  // property, allowing safe access in later code.
   const reportsWithDebates: (ResearchReport & { sources: Source[] })[] = await Promise.all(initialReports.map(async (currentReport) => {
     const otherReports = initialReports.filter(r => r.agentType !== currentReport.agentType);
     
@@ -122,24 +150,28 @@ Your task is to:
    - "hasContradiction": true
    - "summary": A 1-2 sentence summary describing the core of the disagreement (e.g., "The Social Media agent's findings of positive sentiment directly oppose the Financial agent's analysis of negative market indicators.").
    - "contradictionScore": A number from 0-100 quantifying the severity of the contradiction.
+`;
 
-Provide your response as a JSON object inside a markdown code block.`;
+    try {
+        const debateResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: debatePrompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        
+        const debateResult = parseJsonResponse<{ hasContradiction: boolean; summary?: string; contradictionScore?: number; }>(debateResponse.text);
 
-    const debateResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: debatePrompt,
-    });
-    
-    const debateResult = parseJsonResponse<{ hasContradiction: boolean; summary?: string; contradictionScore?: number; }>(debateResponse.text);
-
-    if (debateResult && debateResult.hasContradiction && debateResult.summary && debateResult.contradictionScore) {
-      return { 
-        ...currentReport, 
-        debate: {
-          summary: debateResult.summary,
-          contradictionScore: debateResult.contradictionScore
+        if (debateResult && debateResult.hasContradiction && debateResult.summary && debateResult.contradictionScore) {
+        return { 
+            ...currentReport, 
+            debate: {
+            summary: debateResult.summary,
+            contradictionScore: debateResult.contradictionScore
+            }
+        };
         }
-      };
+    } catch (e) {
+        console.warn("Debate analysis failed slightly:", e);
     }
     
     return currentReport;
@@ -164,19 +196,26 @@ Here are the specialist reports:\n\n`;
   });
 
   consensusPrompt += `Based on ALL the provided reports, weigh the evidence from each specialist perspective. Identify areas of agreement and contradiction. Determine the most likely outcome.
-Present your final analysis as a JSON object inside a markdown code block.
-The JSON object must strictly follow JSON standards. Ensure that any double quotes within string values are properly escaped.
-The JSON object must have three keys:
+The response must be a standard JSON object with three keys:
 1. "outcome": a string which must be one of "YES", "NO", or "UNCERTAIN".
 2. "confidence": a number from 0-100 representing certainty in your final synthesized conclusion.
 3. "summary": a concise string (3-4 sentences) explaining your reasoning, highlighting how you synthesized the different agent perspectives to reach your conclusion.`;
     
-  const consensusResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-pro', // Master orchestrator always uses the most powerful model
-      contents: consensusPrompt,
-  });
+  let consensus = { outcome: 'UNCERTAIN', confidence: 0, summary: 'Could not determine a final consensus.' } as Consensus;
 
-  const consensus = parseJsonResponse<Consensus>(consensusResponse.text) || { outcome: 'UNCERTAIN', confidence: 0, summary: 'Could not determine a final consensus from the agent reports.' };
+  try {
+      const consensusResponse = await ai.models.generateContent({
+          model: 'gemini-3-pro-preview', // Using Pro for complex synthesis
+          contents: consensusPrompt,
+          config: { responseMimeType: 'application/json' }
+      });
+
+      const parsed = parseJsonResponse<Consensus>(consensusResponse.text);
+      if (parsed) consensus = parsed;
+  } catch(e) {
+      console.error("Consensus generation failed:", e);
+      consensus.summary = "An error occurred while generating the consensus.";
+  }
   
   // Step 4: Aggregate and deduplicate sources
   const allSourcesMap = new Map<string, Source>();
